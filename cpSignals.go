@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
+	"path/filepath"
+	"strconv"
+	"syscall"
 )
 
 var BUFFERSIZE int64
@@ -52,7 +56,7 @@ func Copy(src, dst string, BUFFERSIZE int64) error {
 		if n == 0 {
 			break
 		}
-		if _, err := destination.Write(buf[ :n]); err != nil {
+		if _, err := destination.Write(buf[:n]); err != nil {
 			return err
 		}
 		BYTESWEITTEN = BYTESWEITTEN + int64(n)
@@ -66,5 +70,35 @@ func progressInfo() {
 }
 
 func main() {
+	if len(os.Args) != 4 {
+		fmt.Printf("usage: %s soruce destination BUFFERSIZE\n", filepath.Base(os.Args[0]))
+		os.Exit(-1)
+	}
 
+	source := os.Args[1]
+	destination := os.Args[2]
+	BUFFERSIZE, _ = strconv.ParseInt(os.Args[3], 10, 64)
+	BYTESWEITTEN = 0
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs)
+
+	go func() {
+		for {
+			sig := <-sigs
+			switch sig {
+			case syscall.SIGINFO:
+				progressInfo()
+			default:
+				fmt.Println("Ignored:", sig)
+
+			}
+		}
+	}()
+
+	fmt.Printf("Copying %s to %s\n", source, destination)
+	err := Copy(source, destination, BUFFERSIZE)
+	if err != nil {
+		fmt.Printf("File copying failed: %q\n", err)
+	}
 }
