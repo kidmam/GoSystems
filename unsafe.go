@@ -17,10 +17,10 @@ func main() {
 	var sb strings.Builder
 	p := unsafe.Pointer(&sb)
 	*(*[]byte)(unsafe.Pointer(uintptr(p) + uintptr(ptrSize))) = bs
-	fmt.Println(sb)
+	fmt.Println(sb.String())
 
-	//sb.WriteByte('!')
-	//fmt.Println(sb.String())
+	sb.WriteByte('!')
+	fmt.Println(sb.String())
 
 	fmt.Printf("%s\n", bs)
 	fmt.Printf("%s\n", bs[:7])
